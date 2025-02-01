@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+<script>
+    setTimeout(function() {
+        location.reload();
+    }, {{ refresh_interval * 1000 }});
+</script>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPU Monitoring</title>
+    <style>
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid black; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h2>GPU Monitoring Dashboard</h2>
+    <table>
+        <tr>
+            <th>ホスト名</th>
+            <th>CPU使用率 (%)</th>
+            <th>メモリ使用量 (MiB)</th>
+            <th>GPU名</th>
+            <th>GPU使用率 (%)</th>
+            <th>GPUメモリ使用量 (MiB)</th>
+            <th>ユーザー</th>
+            <th>タイムスタンプ</th>
+        </tr>
+        {% for row in metrics %}
+        <tr>
+            <td>{{ row.hostname }}</td>
+            <td>{{ row.cpu_usage }}</td>
+	    <td>{{ row.memory_usage // (1024 * 1024) }}/{{ row.total_memory // (1024 * 1024)}}MiB</td>
+            <td>{{ row.gpu_name or "N/A" }}</td>
+            <td>{{ row.gpu_usage if row.gpu_usage is not none else 0 }}</td>
+            <td>{{ row.gpu_memory_usage if row.gpu_memory_usage else 0 }}/{{ row.gpu_total_memory if row.gpu_total_memory else 0 }}MiB</td>
+            <td>{{ row.runner }}</td>
+            <td>{{ row.timestamp }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
+

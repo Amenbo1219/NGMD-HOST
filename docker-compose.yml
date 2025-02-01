@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:latest
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: monitoring
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./db/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:wq
+
+    ports:
+      - "5432:5432"
+
+  api:
+    build: ./api
+    container_name: monitoring_api
+    restart: always
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_NAME: monitoring
+      DB_USER: postgres
+      DB_PASSWORD: password
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build: ./frontend
+    container_name: monitoring_frontend
+    restart: always
+    depends_on:
+      - api
+    ports:
+      - "5000:5000"
+
+
+volumes:
+  db_data:
+

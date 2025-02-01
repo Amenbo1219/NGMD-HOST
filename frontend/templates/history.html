@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ホスト履歴</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .chart-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 20px;
+            overflow-x: auto;
+            align-items: center;
+        }
+        .chart-box {
+            width: 100%;
+            height: 25vh; /* ブラウザの1/4の高さ */
+        }
+        .user-list-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #f4f4f4;
+            padding: 10px;
+        }
+        .user-list-title {
+            font-size: 0.75vw;
+            font-weight: bold;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+        .user-list {
+            font-size: 0.75vw;
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>ホスト履歴 (過去7日間)</h1>
+    <a href="/history/download" download><button>CSVダウンロード</button></a>
+
+    {% for hostname, records in history_data.items() %}
+        <h2>{{ hostname }}</h2>
+        <div class="chart-container">
+            <div class="chart-box">
+                <canvas id="cpu_chart_{{ hostname }}"></canvas>
+            </div>
+            <div class="chart-box">
+                <canvas id="memory_chart_{{ hostname }}"></canvas>
+            </div>
+            <div class="chart-box">
+                <canvas id="gpu_chart_{{ hostname }}"></canvas>
+            </div>
+            <div class="chart-box">
+                <canvas id="gpu_mem_chart_{{ hostname }}"></canvas>
+            </div>
+            <div class="user-list-container">
+                <div class="user-list-title">利用者</div>
+                <ul class="user-list">
+                    {% set unique_users = records | map(attribute="runner") | select("string") | unique | list %}
+                    {% for user in unique_users %}
+                        {% if user.strip() != "" %}
+                            <li>{{ user }}</li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <script>
+            function createChart(ctx, label, data, color) {
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [{% for record in records %} "{{ record.timestamp }}", {% endfor %}],
+                        datasets: [{
+                            label: label,
+                            data: data,
+                            borderColor: color,
+                            backgroundColor: color + "33",
+                            fill: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false } // 凡例を非表示
+                        },
+                        scales: {
+                            x: { 
+                                display: true, // X軸を表示
+                                title: { display: true, text: "時間" }, // X軸タイトル「時間」を表示
+                                ticks: { display: false } // ラベルを非表示
+                            },
+                            y: { 
+                                display: true, 
+                                title: { display: true, text: label }, 
+                                suggestedMin: 0 
+                            }
+                        }
+                    }
+                });
+            }
+
+            createChart(
+                document.getElementById('cpu_chart_{{ hostname }}').getContext('2d'),
+                "CPU使用率 (%)",
+                [{% for record in records %} {{ record.cpu_usage }}, {% endfor %}],
+                "red"
+            );
+
+            createChart(
+                document.getElementById('memory_chart_{{ hostname }}').getContext('2d'),
+                "メモリ使用量 (MB)",
+                [{% for record in records %} {{ record.memory_usage // 1024 // 1024 }}, {% endfor %}],
+                "blue"
+            );
+
+            createChart(
+                document.getElementById('gpu_chart_{{ hostname }}').getContext('2d'),
+                "GPU使用率 (%)",
+                [{% for record in records %} {{ record.gpu_usage or 0 }}, {% endfor %}],
+                "green"
+            );
+
+            createChart(
+                document.getElementById('gpu_mem_chart_{{ hostname }}').getContext('2d'),
+                "GPUメモリ使用量 (MB)",
+                [{% for record in records %} {{ record.gpu_memory_usage or 0 }}, {% endfor %}],
+                "purple"
+            );
+        </script>
+    {% endfor %}
+</body>
+</html>
+

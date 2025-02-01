@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPU Monitoring Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        canvas { width: 100%; height: 400px; margin-bottom: 50px; }
+    </style>
+</head>
+<body>
+    <h2>GPU Monitoring Dashboard</h2>
+    {% for row in metrics %}
+        <h3>{{ row.hostname }} - 最新10日間のデータ</h3>
+        <div>
+            <canvas id="cpuChart{{ loop.index }}"></canvas>
+            <canvas id="memoryChart{{ loop.index }}"></canvas>
+            <canvas id="gpuUsageChart{{ loop.index }}"></canvas>
+            <canvas id="gpuMemoryChart{{ loop.index }}"></canvas>
+        </div>
+
+        <script>
+            var cpuData = {{ row.cpu_usage_data | tojson }};
+            var memoryData = {{ row.memory_usage_data | tojson }};
+            var gpuUsageData = {{ row.gpu_usage_data | tojson }};
+            var gpuMemoryData = {{ row.gpu_memory_usage_data | tojson }};
+            var labels = {{ row.timestamps | tojson }};
+
+            var ctxCPU = document.getElementById('cpuChart{{ loop.index }}').getContext('2d');
+            var ctxMemory = document.getElementById('memoryChart{{ loop.index }}').getContext('2d');
+            var ctxGPUUsage = document.getElementById('gpuUsageChart{{ loop.index }}').getContext('2d');
+            var ctxGPUMemory = document.getElementById('gpuMemoryChart{{ loop.index }}').getContext('2d');
+
+            new Chart(ctxCPU, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'CPU使用率 (%)',
+                        data: cpuData,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        fill: false
+                    }]
+                }
+            });
+
+            new Chart(ctxMemory, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'メモリ使用量 (MB)',
+                        data: memoryData,
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        fill: false
+                    }]
+                }
+            });
+
+            new Chart(ctxGPUUsage, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'GPU使用率 (%)',
+                        data: gpuUsageData,
+                        borderColor: 'rgba(255, 159, 64, 1)',
+                        fill: false
+                    }]
+                }
+            });
+
+            new Chart(ctxGPUMemory, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'GPUメモリ使用量 (MB)',
+                        data: gpuMemoryData,
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        fill: false
+                    }]
+                }
+            });
+        </script>
+    {% endfor %}
+</body>
+</html>
+
