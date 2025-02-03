@@ -32,12 +32,12 @@
         {% for row in metrics %}
         <tr>
             <td>{{ row.hostname }}</td>
-            <td>{{ row.ip}}
-            <td>{{ row.cpu_usage }}</td>
-	    <td>{{ row.memory_usage // (1024 * 1024  * 1024) }}/{{ row.total_memory // (1024  * 1024 * 1024)}}GiB</td>
+            <td>{{ row.ip }}</td>
+            <td>{{ row.cpu_usage | round(3) }}</td>
+            <td>{{ (row.memory_usage / (1024 * 1024 * 1024)) | round(3) }}/{{ (row.total_memory / (1024 * 1024 * 1024)) | round(3) }} GiB</td>
             <td>{{ row.gpu_name or "N/A" }}</td>
-            <td>{{ row.gpu_usage if row.gpu_usage is not none else 0 }}</td>
-            <td>{{ row.gpu_memory_usage // (1024) if row.gpu_memory_usage else 0 }}/{{ row.gpu_total_memory //(1024) if row.gpu_total_memory else 0 }}GiB</td>
+            <td>{{ row.gpu_usage | round(3) if row.gpu_usage is not none else 0 }}</td>
+            <td>{{ (row.gpu_memory_usage / 1024) | round(3) if row.gpu_memory_usage else 0 }}/{{ (row.gpu_total_memory / 1024) | round(3) if row.gpu_total_memory else 0 }} GiB</td>
             <td>{{ row.runner }}</td>
             <td>{{ row.timestamp }}</td>
         </tr>
