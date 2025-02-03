@@ -39,9 +39,9 @@ bash req.sh
 ## アクセス
 
 - モニタリング機能: `http://<起動したIP>:5000`
-  <img width="1437" alt="Image" src="https://github.com/user-attachments/assets/525c47a3-7ad1-4b31-a660-e1a6dfc4348d" />
+<img width="1433" alt="Image" src="https://github.com/user-attachments/assets/a9f476b6-4e13-40ae-9d75-7c5448600e84" /> 
 - 7日間のログ表示機能: `http://<起動したIP>:5000`
-  <img width="1439" alt="Image" src="https://github.com/user-attachments/assets/c3677828-944c-44a7-a94f-3e733f5f8458" />
+<img width="1434" alt="Image" src="https://github.com/user-attachments/assets/b8c486f0-1afe-48f5-bd71-9dbede8fe91f" />
 
   
 
