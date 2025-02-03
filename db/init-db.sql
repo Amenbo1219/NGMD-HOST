@@ -16,6 +16,7 @@ CREATE TABLE system_metrics (
     gpu_memory_usage BIGINT,
     gpu_total_memory BIGINT,
     runner TEXT ,
+    ip TEXT,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
