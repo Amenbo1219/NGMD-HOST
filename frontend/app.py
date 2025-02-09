@@ -34,10 +34,10 @@ def index():
 
     latest_data = list(latest_metrics.values())
 
-    #for row in latest_data:
-        #row["timestamp"] = format_timestamp(row["timestamp"])
+    for row in latest_data:
+        row["timestamp"] = format_timestamp(row["timestamp"])
 
-    return render_template("index.html", metrics=latest_data,refresh_interval=10)
+    return render_template("index.html", metrics=latest_data,refresh_interval=10,static_url_path='/static', datetime=datetime)
 
 
 @app.route("/history")
@@ -54,7 +54,19 @@ def history():
         entry["timestamp"] = format_timestamp(entry["timestamp"])
         formatted_data[entry["hostname"]].append(entry)
 
-    return render_template("history.html", history_data=formatted_data)
+    # 各ホストについて、タイムスタンプ順にソートした上で、
+    # 件数が20件を超える場合は等間隔に20点抽出する
+    for host, records in formatted_data.items():
+        # タイムスタンプ順に昇順でソート
+        records.sort(key=lambda x: x["timestamp"])
+        if len(records) > 20:
+            n = len(records)
+            # 20点抽出するための比率
+            step = n / 20
+            sampled = [records[int(i * step)] for i in range(20)]
+            formatted_data[host] = sampled
+
+    return render_template("history.html", history_data=formatted_data, static_url_path='/static')
 
 @app.route("/history/download")
 def download_history():
@@ -66,12 +78,12 @@ def download_history():
 
     output = io.StringIO()
     csv_writer = csv.writer(output)
-    csv_writer.writerow(["hostname", "timestamp", "cpu_usage", "memory_usage", "gpu_usage", "gpu_memory_usage", "runner"])
+    csv_writer.writerow(["hostname", "timestamp", "cpu_usage", "memory_usage", "gpu_usage", "gpu_memory_usage", "runner", "ip"])
 
     for row in data:
         csv_writer.writerow([
             row["hostname"], row["timestamp"], row["cpu_usage"],
-            row["memory_usage"], row["gpu_usage"], row["gpu_memory_usage"], row["runner"]
+            row["memory_usage"], row["gpu_usage"], row["gpu_memory_usage"], row["runner"], row["ip"]
         ])
 
     output.seek(0)
