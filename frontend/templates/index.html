@@ -8,19 +8,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <title>GPU Monitoring</title>
     <style>
-        table { width: 100%; border-collapse: collapse; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
         th, td { border: 1px solid black; padding: 8px; text-align: left; }
         th { background-color: #f2f2f2; }
+        .warning { background-color: #ffcccc; }
+        .server-table { width: 100%; } /* テーブルの幅を100%に設定 */
     </style>
 </head>
 <body>
     <h2>GPU Monitoring Dashboard</h2>
-    <table>
+    <table class="server-table">
         <tr>
             <th>ホスト名</th>
-            <th>IP</th>
+            <th>IP(試験運用)</th>
             <th>CPU使用率 (%)</th>
             <th>メモリ使用量 (GiB)</th>
             <th>GPU名</th>
@@ -30,7 +33,11 @@
             <th>タイムスタンプ</th>
         </tr>
         {% for row in metrics %}
-        <tr>
+        <tr {% if row.runner and row.runner|trim != "" %}
+              style="background-color: gray;"
+            {% elif (datetime.utcnow() - datetime.fromisoformat(row.timestamp)).total_seconds() > 1800 %}
+              class="warning"
+            {% endif %}>
             <td>{{ row.hostname }}</td>
             <td>{{ row.ip }}</td>
             <td>{{ row.cpu_usage | round(3) }}</td>
@@ -43,6 +50,8 @@
         </tr>
         {% endfor %}
     </table>
+
+    
 </body>
 </html>
 
