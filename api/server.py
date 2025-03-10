@@ -69,13 +69,39 @@ def get_latest_metrics():
     try:
         conn = get_db_connection()
         cur = conn.cursor()
+def get_latest_metrics():
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
         cur.execute("""
-        SELECT  hostname, cpu_usage, memory_usage, total_memory, gpu_name, gpu_usage,
+        WITH latest_data AS (
+            SELECT DISTINCT ON (hostname) hostname, cpu_usage, memory_usage, total_memory, gpu_name, gpu_usage,
                    gpu_memory_usage, gpu_total_memory, runner, ip, timestamp
-        FROM system_metrics
-        WHERE timestamp >= NOW() - INTERVAL '7 days'
+            FROM system_metrics
+            WHERE timestamp >= NOW() - INTERVAL '7 days'
+            ORDER BY hostname, timestamp DESC
+        )
+        SELECT hostname, cpu_usage, memory_usage, total_memory, gpu_name, gpu_usage,
+               gpu_memory_usage, gpu_total_memory, runner, ip, timestamp
+        FROM latest_data
         ORDER BY hostname, timestamp DESC
+        LIMIT 100;
         """)
+        data = cur.fetchall()
+        cur.close()
+        conn.close()
+
+        # JST に変換
+        jst_timezone = pytz.timezone('Asia/Tokyo')
+        return [{"hostname": row[0], "cpu_usage": row[1], "memory_usage": row[2],
+                 "total_memory": row[3], "gpu_name": row[4], "gpu_usage": row[5],
+                 "gpu_memory_usage": row[6], "gpu_total_memory": row[7],
+                 "runner": row[8], "ip": row[9], 
+                 "timestamp": row[10].astimezone(jst_timezone).strftime('%Y-%m-%d %H:%M:%S')}
+                for row in data]
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
         data = cur.fetchall()
         cur.close()
         conn.close()
